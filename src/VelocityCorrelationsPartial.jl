@@ -173,7 +173,7 @@ function find_current_modes_interaction(s::Union{MultiComponentSimulation,MCSPVS
 
     Ftot = calculate_total_force(s)
     for species in 1:N_species
-        _find_current_modes_partial!(Rej[species], Imj[species], s.r_array[species], Ftot[species], s.mobility[species].*s.F_array[species], kspace; "i")
+        _find_current_modes_partial!(Rej[species], Imj[species], s.r_array[species], Ftot[species], s.mobility[species].*s.F_array[species], kspace, force_keyword="i")
     end
 
     if verbose
@@ -201,7 +201,7 @@ function find_current_modes_active(s::Union{MultiComponentSimulation,MCSPVSimula
 
     Ftot = calculate_total_force(s)
     for species in 1:N_species
-        _find_current_modes_partial!(Rej[species], Imj[species], s.r_array[species], Ftot[species], s.mobility[species].*s.F_array[species], kspace; "a")
+        _find_current_modes_partial!(Rej[species], Imj[species], s.r_array[species], Ftot[species], s.mobility[species].*s.F_array[species], kspace, force_keyword="a")
     end
 
     if verbose
