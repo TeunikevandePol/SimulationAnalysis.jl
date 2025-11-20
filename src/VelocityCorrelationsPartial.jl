@@ -21,6 +21,8 @@ struct MultiComponentCurrentModesAct <: AbstractDensityModes
     Im::Vector{Array{Float64, 2}}
 end
 
+# Ftot: total force
+# f: interaction force
 function _find_current_modes_partial!(Rej, Imj, r, Ftot, f, kspace; force_keyword="t")
     Ndim, N, N_timesteps = size(r)
     Nk = kspace.Nk
@@ -154,62 +156,62 @@ function find_current_modes_active(s::Union{SingleComponentSimulation, SelfPrope
     return SingleComponentCurrentModesAct(Rej, Imj)
 end
 
-# UPDATE THESE LATER!! (Don't need them yet)
-# function find_current_modes_interaction(s::Union{MultiComponentSimulation,MCSPVSimulation}, kspace::KSpace; verbose=true)
-#     N_species = length(s.r_array)
-#     Nk = kspace.Nk
-#     N_timesteps = size(s.r_array[1], 3)
-#     klengths = kspace.k_lengths
 
-#     Rej = [zeros(N_timesteps, Nk) for i = 1:N_species]
-#     Imj = [zeros(N_timesteps, Nk) for i = 1:N_species]
-#     if verbose
-#         println("Calculating density modes for $(s.N) particles at $N_timesteps time points for $Nk wave vectors")
-#         println("Memory usage: $(Base.format_bytes(2*Base.summarysize(Rej)))")
-#         println("Based on 10 GFLOPS, this will take approximately $(round(Nk*s.N*N_timesteps*9/10^10, digits=1)) seconds.")
-#     end
-#     tstart = time()
+function find_current_modes_interaction(s::Union{MultiComponentSimulation,MCSPVSimulation}, kspace::KSpace; verbose=true)
+    N_species = length(s.r_array)
+    Nk = kspace.Nk
+    N_timesteps = size(s.r_array[1], 3)
 
-#     for species in 1:N_species
-#         _find_current_modes_partial!(Rej[species], Imj[species], s.r_array[species], s.F_array[species], s.u_array[species], s.v0[species], s.mobility[species], kspace, "i")
-#     end
+    Rej = [zeros(N_timesteps, Nk) for i = 1:N_species]
+    Imj = [zeros(N_timesteps, Nk) for i = 1:N_species]
+    if verbose
+        println("Calculating density modes for $(s.N) particles at $N_timesteps time points for $Nk wave vectors")
+        println("Memory usage: $(Base.format_bytes(2*Base.summarysize(Rej)))")
+        println("Based on 10 GFLOPS, this will take approximately $(round(Nk*s.N*N_timesteps*9/10^10, digits=1)) seconds.")
+    end
+    tstart = time()
 
-#     if verbose
-#         tstop = time()
-#         println("Elapsed time: $(round(tstop-tstart,digits=3)) seconds")
-#         println("Achieved GFLOPS: $(round(Nk*s.N*N_timesteps*9/(tstop-tstart)/10^9, digits=3))")
-#     end
+    Ftot = calculate_total_force(s)
+    for species in 1:N_species
+        _find_current_modes_partial!(Rej[species], Imj[species], s.r_array[species], Ftot[species], s.mobility[species].*s.F_array[species], kspace; "i")
+    end
 
-#     return MultiComponentCurrentModesInt(Rej, Imj)
-# end
+    if verbose
+        tstop = time()
+        println("Elapsed time: $(round(tstop-tstart,digits=3)) seconds")
+        println("Achieved GFLOPS: $(round(Nk*s.N*N_timesteps*9/(tstop-tstart)/10^9, digits=3))")
+    end
 
-# function find_current_modes_active(s::Union{MultiComponentSimulation,MCSPVSimulation}, kspace::KSpace; verbose=true)
-#     N_species = length(s.r_array)
-#     Nk = kspace.Nk
-#     N_timesteps = size(s.r_array[1], 3)
-#     klengths = kspace.k_lengths
+    return MultiComponentCurrentModesInt(Rej, Imj)
+end
 
-#     Rej = [zeros(N_timesteps, Nk) for i = 1:N_species]
-#     Imj = [zeros(N_timesteps, Nk) for i = 1:N_species]
-#     if verbose
-#         println("Calculating density modes for $(s.N) particles at $N_timesteps time points for $Nk wave vectors")
-#         println("Memory usage: $(Base.format_bytes(2*Base.summarysize(Rej)))")
-#         println("Based on 10 GFLOPS, this will take approximately $(round(Nk*s.N*N_timesteps*9/10^10, digits=1)) seconds.")
-#     end
-#     tstart = time()
+function find_current_modes_active(s::Union{MultiComponentSimulation,MCSPVSimulation}, kspace::KSpace; verbose=true)
+    N_species = length(s.r_array)
+    Nk = kspace.Nk
+    N_timesteps = size(s.r_array[1], 3)
 
-#     for species in 1:N_species
-#         _find_current_modes_partial!(Rej[species], Imj[species], s.r_array[species], s.F_array[species], s.u_array[species], s.v0[species], s.mobility[species], kspace, "a")
-#     end
+    Rej = [zeros(N_timesteps, Nk) for i = 1:N_species]
+    Imj = [zeros(N_timesteps, Nk) for i = 1:N_species]
+    if verbose
+        println("Calculating density modes for $(s.N) particles at $N_timesteps time points for $Nk wave vectors")
+        println("Memory usage: $(Base.format_bytes(2*Base.summarysize(Rej)))")
+        println("Based on 10 GFLOPS, this will take approximately $(round(Nk*s.N*N_timesteps*9/10^10, digits=1)) seconds.")
+    end
+    tstart = time()
 
-#     if verbose
-#         tstop = time()
-#         println("Elapsed time: $(round(tstop-tstart,digits=3)) seconds")
-#         println("Achieved GFLOPS: $(round(Nk*s.N*N_timesteps*9/(tstop-tstart)/10^9, digits=3))")
-#     end
+    Ftot = calculate_total_force(s)
+    for species in 1:N_species
+        _find_current_modes_partial!(Rej[species], Imj[species], s.r_array[species], Ftot[species], s.mobility[species].*s.F_array[species], kspace; "a")
+    end
 
-#     return MultiComponentCurrentModesAct(Rej, Imj)
-# end
+    if verbose
+        tstop = time()
+        println("Elapsed time: $(round(tstop-tstart,digits=3)) seconds")
+        println("Achieved GFLOPS: $(round(Nk*s.N*N_timesteps*9/(tstop-tstart)/10^9, digits=3))")
+    end
+
+    return MultiComponentCurrentModesAct(Rej, Imj)
+end
 
 
 # function show(io::IO,  ::MIME"text/plain", ρkt::SingleComponentCurrentModes)
