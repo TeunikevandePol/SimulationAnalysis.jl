@@ -39,6 +39,8 @@ include("CurrentModes.jl")
 include("VelocityCorrelations.jl")
 include("COMCorrection.jl")
 
+include("VelocityCorrelationsPartial.jl")
+
 
 function show(io::IO,  ::MIME"text/plain", s::Union{KSpace, Simulation})
     println(io, "This is a $(typeof(s)).")
