@@ -253,3 +253,34 @@ function find_static_cross_correlations(s::Union{MultiComponentSimulation,MCSPVS
     end
     return wk / s.N
 end
+
+
+# NEW: dynamic cross-correlations?
+function find_dynamic_cross_correlations(s::Union{SingleComponentSimulation, SelfPropelledVoronoiSimulation}, kspace::KSpace, jkt1::AbstractDensityModes, jkt2::AbstractDensityModes; kmin=0.0, kmax=10.0^10.0)
+    Ndt = length(s.dt_array)
+    wkt = zeros(Ndt)
+    real_correlation_function!(wkt, jkt1.Re, jkt1.Im, jkt2.Re, jkt2.Im, kspace, s.dt_array, s.t1_t2_pair_array, kmin, kmax)
+    return wkt ./ s.N
+end
+
+function find_dynamic_cross_correlations(s::Union{MultiComponentSimulation,MCSPVSimulation}, kspace::KSpace, jkt1::AbstractDensityModes, jkt2::AbstractDensityModes; kmin=0.0, kmax=10.0^10.0)
+    N_species = s.N_species
+    Ndt = length(s.dt_array)
+    wkt = [zeros(Ndt) for α=1:N_species, β=1:N_species]
+    for α=1:N_species
+        for β = 1:N_species
+            real_correlation_function!(wkt[α,β], jkt1.Re[α], jkt1.Im[α], jkt2.Re[β], jkt2.Im[β], kspace, s.dt_array, s.t1_t2_pair_array, kmin, kmax)
+        end
+    end
+    return wkt ./ s.N
+end
+
+function find_dynamic_cross_correlations(s::Simulation, kspace::KSpace, jkt1::AbstractDensityModes, jkt2::AbstractDensityModes, k_sample_array::AbstractVector; k_binwidth=0.1)
+    wkt_array = []
+    for (ik, k) in enumerate(k_sample_array)
+        kmin = k - k_binwidth/2
+        kmax = k + k_binwidth/2
+        push!(wkt_array, find_dynamic_cross_correlations(s, kspace, jkt1, jkt2; kmin=kmin, kmax=kmax))
+    end
+    return wkt_array
+end
