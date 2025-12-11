@@ -152,9 +152,9 @@ This function is only implemented for `SingleComponentSimulation`.
 function find_self_intermediate_scattering_function(s::Simulation, kspace::KSpace, k_sample_array::AbstractVector; k_binwidth=0.1)
     F_array = []
     for (ik, k) in enumerate(k_sample_array)
-        if verbose
-            println("Computing Fs for k = $k")
-        end
+        # if verbose
+            # println("Computing Fs for k = $k")
+        # end
         kmin = k - k_binwidth/2
         kmax = k + k_binwidth/2
         push!(F_array, find_self_intermediate_scattering_function(s, kspace; kmin=kmin, kmax=kmax))
