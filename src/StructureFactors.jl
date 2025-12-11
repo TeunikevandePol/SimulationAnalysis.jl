@@ -126,13 +126,16 @@ The average is performed over time and k-vectors within the magnitude range `[km
 function find_structure_factor(s::Union{MultiComponentSimulation,MCSPVSimulation}, kspace::KSpace, ρkt::MultiComponentDensityModes; kmin=0.0, kmax=10.0^10.0)
     N_species = s.N_species
     Sk = zeros(N_species, N_species)
-    for α=1:N_species
-        for β = α:N_species
-            Sk[β, α] = real_static_correlation_function(ρkt.Re[α], ρkt.Im[α], ρkt.Re[β], ρkt.Im[β], kspace, kmin, kmax)
-            if α != β
-                Sk[α, β] = Sk[β, α]
-            end
-        end
+    # for α=1:N_species
+    #     for β = α:N_species
+    #         Sk[β, α] = real_static_correlation_function(ρkt.Re[α], ρkt.Im[α], ρkt.Re[β], ρkt.Im[β], kspace, kmin, kmax)
+    #         if α != β
+    #             Sk[α, β] = Sk[β, α]
+    #         end
+    #     end
+    # end
+    for α=1:N_species, β=1:N_species
+        Sk[α,β] = real_static_correlation_function(ρkt.Re[α], ρkt.Im[α], ρkt.Re[β], ρkt.Im[β], kspace, kmin, kmax)
     end
     return Sk / s.N
 end
